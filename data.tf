@@ -5,7 +5,7 @@ data "aws_ami" "ubuntu" {
     name   = "name"
     values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
-
+  #Dummy COmmit
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
