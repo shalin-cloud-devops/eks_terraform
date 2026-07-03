@@ -4,7 +4,7 @@ module "eks" {
 
   name               = "boutique-app-eks"
   kubernetes_version = "1.33"
-
+  # Dummy
   addons = {
 
     coredns = {}
