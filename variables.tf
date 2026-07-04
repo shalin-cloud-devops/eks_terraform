@@ -6,9 +6,4 @@ variable "aws_region" {
 
 }
 
-variable "key_name" {
-  type        = string
-  description = "micoroservices_app"
-
-}
 
