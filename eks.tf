@@ -25,7 +25,7 @@ module "eks" {
   additional_security_group_ids = [aws_security_group.boutique_app_sg.id]
 
   eks_managed_node_groups = {
-    boutique_app_node_group = {
+    boutique_nodes = {
 
       ami_type       = "AL2023_x86_64_STANDARD"
       instance_types = ["c7i-flex.large"]
