@@ -11,14 +11,8 @@ on:
     paths:
       - "**/*.tf"
       - ".github/workflows/**"
-  # This must be at the same level as push/pull_request
+  # Clean, parameter-less manual trigger
   workflow_dispatch:
-    inputs:
-      destroy:
-        description: "Destroy Infrastructure?"
-        type: boolean
-        required: true
-        default: false
 
 permissions:
   id-token: write
@@ -29,8 +23,6 @@ jobs:
   terraform-plan:
     name: "Terraform Validate & Plan"
     runs-on: ubuntu-latest
-    # Skip planning if we are destroying
-    if: github.event.inputs.destroy != 'true'
 
     env:
       AWS_REGION: "us-east-1"
@@ -69,9 +61,9 @@ jobs:
   terraform-apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
-    # This job now runs even if 'terraform-plan' was skipped (due to destroy=true)
     needs: terraform-plan
-    if: always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
+    # Only run apply if on main branch or manually dispatched
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     environment: production
 
     env:
@@ -94,7 +86,6 @@ jobs:
           terraform_version: "1.8.0"
 
       - name: "Download Terraform Plan"
-        if: github.event.inputs.destroy != 'true'
         uses: actions/download-artifact@v4
         with:
           name: tfplan
