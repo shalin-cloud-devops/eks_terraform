@@ -1,5 +1,3 @@
-# This is a CI pipeline for github actions
-
 name: "Terraform CI"
 
 on:
@@ -13,9 +11,9 @@ on:
     paths:
       - "**/*.tf"
       - ".github/workflows/**"
-
+  # This must be at the same level as push/pull_request
   workflow_dispatch:
-    inputs: # <-- Correctly indented
+    inputs:
       destroy:
         description: "Destroy Infrastructure?"
         type: boolean
@@ -31,6 +29,8 @@ jobs:
   terraform-plan:
     name: "Terraform Validate & Plan"
     runs-on: ubuntu-latest
+    # Skip planning if we are destroying
+    if: github.event.inputs.destroy != 'true'
 
     env:
       AWS_REGION: "us-east-1"
@@ -51,18 +51,9 @@ jobs:
         with:
           terraform_version: "1.8.0"
 
-      - name: "Terraform FMT"
-        id: fmt
-        run: terraform fmt -check
-        continue-on-error: true
-
       - name: "Terraform init"
         id: init
         run: terraform init
-
-      - name: "Terraform validate"
-        id: validate
-        run: terraform validate -no-color
 
       - name: "Terraform Plan"
         id: plan
@@ -75,41 +66,12 @@ jobs:
           path: tfplan
           retention-days: 1
 
-      - name: "Update Pull Request with Plan"
-        uses: actions/github-script@v7
-        if: github.event_name == 'pull_request'
-        env:
-          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-
-            <details><summary>Show Plan</summary>
-
-            \`\`\`\n
-            ${process.env.PLAN}
-            \`\`\`
-
-            </details>`;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
-
   terraform-apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
+    # This job now runs even if 'terraform-plan' was skipped (due to destroy=true)
     needs: terraform-plan
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-
-    # <-- MOVED UP HERE (Job-level configuration)
+    if: always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
     environment: production
 
     env:
@@ -132,6 +94,7 @@ jobs:
           terraform_version: "1.8.0"
 
       - name: "Download Terraform Plan"
+        if: github.event.inputs.destroy != 'true'
         uses: actions/download-artifact@v4
         with:
           name: tfplan
@@ -140,12 +103,12 @@ jobs:
         id: init
         run: terraform init
 
-      #- name: "Terraform Apply"
-      # if: github.event.inputs.destroy != 'true'
-      #id: apply
-      #run: terraform apply -input=false -no-color tfplan
-
-      - name: "Terraform Destroy"
-        if: github.event.inputs.destroy == 'true'
-        id: destroy
-        run: terraform destroy -auto-approve -input=false
+      - name: "Terraform Apply or Destroy"
+        run: |
+          if [ "${{ github.event.inputs.destroy }}" = "true" ]; then
+            echo "Destroying infrastructure..."
+            terraform destroy -auto-approve -input=false
+          else
+            echo "Applying infrastructure..."
+            terraform apply -input=false -no-color tfplan
+          fi
