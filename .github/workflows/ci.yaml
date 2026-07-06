@@ -142,7 +142,8 @@ jobs:
 
       - name: "Terraform Apply or Destroy"
         run: |
-          if [ "${{ github.event.inputs.destroy }}" = "true" ]; then
+          # Default to apply unless manually triggered with 'destroy=true'
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ github.event.inputs.destroy }}" == "true" ]; then
             echo "Destroying infrastructure..."
             terraform destroy -auto-approve -input=false
           else
