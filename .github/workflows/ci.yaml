@@ -140,10 +140,10 @@ jobs:
         id: init
         run: terraform init
 
-      - name: "Terraform Apply"
-        if: github.event.inputs.destroy != 'true'
-        id: apply
-        run: terraform apply -input=false -no-color tfplan
+      #- name: "Terraform Apply"
+      # if: github.event.inputs.destroy != 'true'
+      #id: apply
+      #run: terraform apply -input=false -no-color tfplan
 
       - name: "Terraform Destroy"
         if: github.event.inputs.destroy == 'true'
