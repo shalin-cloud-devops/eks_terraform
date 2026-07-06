@@ -140,13 +140,12 @@ jobs:
         id: init
         run: terraform init
 
-      - name: "Terraform Apply or Destroy"
-        run: |
-          # Default to apply unless manually triggered with 'destroy=true'
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ github.event.inputs.destroy }}" == "true" ]; then
-            echo "Destroying infrastructure..."
-            terraform destroy -auto-approve -input=false
-          else
-            echo "Applying infrastructure..."
-            terraform apply -input=false -no-color tfplan
-          fi
+      - name: "Terraform Apply"
+        if: github.event.inputs.destroy != 'true'
+        id: apply
+        run: terraform apply -input=false -no-color tfplan
+
+      - name: "Terraform Destroy"
+        if: github.event.inputs.destroy == 'true'
+        id: destroy
+        run: terraform destroy -auto-approve -input=false
