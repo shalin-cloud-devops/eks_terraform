@@ -77,7 +77,7 @@ jobs:
         run: terraform plan -input=false -no-color -out=tfplan
 
       - name: "terraform plan upload"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tfplan
           path: tfplan
