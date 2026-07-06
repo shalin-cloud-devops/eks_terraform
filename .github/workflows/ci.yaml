@@ -4,7 +4,6 @@ name: "Terraform CI"
 
 on:
   push:
-    # Triggers on any commit pushed to any branch
     paths:
       - "**/*.tf"
       - ".github/workflows/**"
@@ -15,30 +14,23 @@ on:
       - "**/*.tf"
       - ".github/workflows/**"
 
+  workflow_dispatch:
+    inputs: # <-- Correctly indented
+      destroy:
+        description: "Destroy Infrastructure?"
+        type: boolean
+        required: true
+        default: false
+
 permissions:
   id-token: write
   contents: read
   pull-requests: write
 
 jobs:
-  # scan:
-  #   name: "Static TF Scan (Checkov)"
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: "Checkout code"
-  #       uses: actions/checkout@v4
-  #
-  #     - name: "Terraform Scan"
-  #       uses: bridgecrewio/checkov-action@master
-  #       with:
-  #         directory: .
-  #         framework: terraform
-  #         soft_fail: false
-
   terraform-plan:
     name: "Terraform Validate & Plan"
     runs-on: ubuntu-latest
-    #needs: scan
 
     env:
       AWS_REGION: "us-east-1"
@@ -85,7 +77,6 @@ jobs:
 
       - name: "Update Pull Request with Plan"
         uses: actions/github-script@v7
-        # This step will gracefully skip if the run was triggered by a direct push instead of a PR
         if: github.event_name == 'pull_request'
         env:
           PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
@@ -116,7 +107,10 @@ jobs:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
     needs: terraform-plan
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+
+    # <-- MOVED UP HERE (Job-level configuration)
+    environment: production
 
     env:
       AWS_REGION: "us-east-1"
@@ -146,6 +140,12 @@ jobs:
         id: init
         run: terraform init
 
-      - name: "Terraform Apply"
-        id: apply
-        run: terraform apply -input=false -no-color tfplan
+      - name: "Terraform Apply or Destroy"
+        run: |
+          if [ "${{ github.event.inputs.destroy }}" = "true" ]; then
+            echo "Destroying infrastructure..."
+            terraform destroy -auto-approve -input=false
+          else
+            echo "Applying infrastructure..."
+            terraform apply -input=false -no-color tfplan
+          fi
