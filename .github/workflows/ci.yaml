@@ -138,7 +138,7 @@ jobs:
           terraform_version: "1.8.0"
 
       - name: "Download Terraform Plan"
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: tfplan
 
