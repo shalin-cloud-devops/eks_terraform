@@ -28,14 +28,18 @@ resource "aws_iam_role_policy" "bastion_eks_describe" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = ["eks:DescribeCluster", "eks:ListClusters"]
+        Effect = "Allow"
+        Action = [
+          "eks:DescribeCluster",
+          "eks:ListClusters",
+          "eks:DescribeNodegroup",
+          "eks:UpdateNodegroupConfig"
+        ]
         Resource = module.eks.cluster_arn
       }
     ]
   })
 }
-
 resource "aws_iam_instance_profile" "bastion_profile" {
   name = "bastion-ssm-profile"
   role = aws_iam_role.bastion_ssm.name
@@ -53,5 +57,8 @@ module "bastion_host" {
   associate_public_ip_address = true
 
   iam_instance_profile = aws_iam_instance_profile.bastion_profile.name
+
+  user_data = file("${path.module}/scripts/bootstrap_bastion.sh")
+
 }
 

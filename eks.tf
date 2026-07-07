@@ -44,9 +44,9 @@ module "eks" {
       ami_type       = "AL2023_x86_64_STANDARD"
       instance_types = ["c7i-flex.large"]
 
-      desired_capacity = 2
-      max_capacity     = 10
-      min_capacity     = 2
+      min_size     = 2
+      max_size     = 10
+      desired_size = 2
 
       tags = {
         Name        = "boutique_app_node_group"
