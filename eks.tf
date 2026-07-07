@@ -20,6 +20,20 @@ module "eks" {
   endpoint_public_access                   = false
   enable_cluster_creator_admin_permissions = true
 
+  access_entries = {
+    bastion = {
+      principal_arn = aws_iam_role.bastion_ssm.arn
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+  }
+
   vpc_id                        = module.vpc.vpc_id
   subnet_ids                    = module.vpc.private_subnets
   additional_security_group_ids = [aws_security_group.boutique_app_sg.id]
@@ -43,4 +57,3 @@ module "eks" {
 
 
 }
-

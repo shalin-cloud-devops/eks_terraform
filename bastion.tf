@@ -20,6 +20,22 @@ resource "aws_iam_role_policy_attachment" "attach_ssm_policy_role" {
 
 }
 
+resource "aws_iam_role_policy" "bastion_eks_describe" {
+  name = "eks-describe"
+  role = aws_iam_role.bastion_ssm.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["eks:DescribeCluster", "eks:ListClusters"]
+        Resource = module.eks.cluster_arn
+      }
+    ]
+  })
+}
+
 resource "aws_iam_instance_profile" "bastion_profile" {
   name = "bastion-ssm-profile"
   role = aws_iam_role.bastion_ssm.name
