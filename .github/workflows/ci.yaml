@@ -41,7 +41,7 @@ jobs:
       - name: "Setup Terraform"
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.8.0"
+          terraform_version: "1.11.0"
 
       - name: "Terraform init"
         id: init
@@ -83,7 +83,7 @@ jobs:
       - name: "Setup Terraform"
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.8.0"
+          terraform_version: "1.11.0"
 
       - name: "Download Terraform Plan"
         uses: actions/download-artifact@v4

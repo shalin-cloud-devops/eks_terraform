@@ -8,11 +8,11 @@ terraform {
     }
   }
   backend "s3" {
-    bucket         = "otel-eks-bucket"
-    key            = "boutique_app/terraform.tfstate"
-    region         = "ap-south-1"
-    dynamodb_table = "otel_table"
-    encrypt        = true
+    bucket       = "otel-eks-bucket"
+    key          = "boutique_app/terraform.tfstate"
+    region       = "us-east-1"
+    use_lockfile = true
+    encrypt      = true
   }
 }
 

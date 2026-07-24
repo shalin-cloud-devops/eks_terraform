@@ -3,8 +3,8 @@ module "eks" {
   version = "~> 21.0"
 
   name               = "boutique-app-eks"
-  kubernetes_version = "1.33"
-  # Dummy
+  kubernetes_version = "1.34"
+
   addons = {
 
     coredns = {}
